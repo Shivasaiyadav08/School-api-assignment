@@ -6,29 +6,30 @@ const cors = require("cors");
 
 const app = express();
 
-// ✅ FIX 1: use express.json()
+// Middleware
 app.use(express.json());
 app.use(cors());
 
-// ✅ FIX 2: use mysql.createConnection
+// MySQL Connection
 const db = mysql.createConnection({
-  host: "localhost",
-  user: process.env.DB_USER,
-  password: process.env.PASSWORD_DB,
-  database: "school_db"
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME || "school_db"
 });
 
-db.connect(err => {
+db.connect((err) => {
   if (err) {
-    console.log("DB Error:", err);
+    console.log("❌ DB Error:", err);
   } else {
-    console.log("MySQL Connected");
+    console.log("✅ MySQL Connected");
   }
 });
 
-// Distance function
+
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
+
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
 
@@ -42,7 +43,7 @@ function getDistance(lat1, lon1, lat2, lon2) {
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
-// Add School
+// ✅ Add School API
 app.post("/addSchool", (req, res) => {
   const { name, address, latitude, longitude } = req.body;
 
@@ -50,40 +51,56 @@ app.post("/addSchool", (req, res) => {
     return res.status(400).json({ message: "All fields required" });
   }
 
-  const sql = "INSERT INTO schools (name, address, latitude, longitude) VALUES (?, ?, ?, ?)";
+  const sql = `
+    INSERT INTO schools (name, address, latitude, longitude)
+    VALUES (?, ?, ?, ?)
+  `;
 
   db.query(sql, [name, address, latitude, longitude], (err) => {
-    if (err) return res.status(500).json(err);
+    if (err) {
+      console.log(err);
+      return res.status(500).json({ error: "Database error" });
+    }
 
-    res.json({ message: "School added successfully" });
+    res.json({ message: "✅ School added successfully" });
   });
 });
 
-// List Schools
+// ✅ List Schools API
 app.get("/listSchools", (req, res) => {
   const { latitude, longitude } = req.query;
 
   if (!latitude || !longitude) {
-    return res.status(400).json({ message: "Latitude & Longitude required" });
+    return res.status(400).json({
+      message: "Latitude & Longitude required"
+    });
   }
 
   db.query("SELECT * FROM schools", (err, results) => {
-    if (err) return res.status(500).json(err);
+    if (err) {
+      return res.status(500).json({ error: "Database error" });
+    }
 
-    const sorted = results.map(school => {
-      const distance = getDistance(
-        latitude,
-        longitude,
-        school.latitude,
-        school.longitude
-      );
-      return { ...school, distance };
-    }).sort((a, b) => a.distance - b.distance);
+    const sortedSchools = results
+      .map((school) => {
+        const distance = getDistance(
+          parseFloat(latitude),
+          parseFloat(longitude),
+          school.latitude,
+          school.longitude
+        );
 
-    res.json(sorted);
+        return { ...school, distance };
+      })
+      .sort((a, b) => a.distance - b.distance);
+
+    res.json(sortedSchools);
   });
 });
 
-app.listen(3000, () => {
-  console.log("Server running on port 3000");
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
