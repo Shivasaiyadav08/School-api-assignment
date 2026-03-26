@@ -1,17 +1,17 @@
 require("dotenv").config();
 
-
 const express = require("express");
 const mysql = require("mysql2");
-const bodyParser = require("body-parser");
 const cors = require("cors");
 
 const app = express();
-app.use(json());
+
+// ✅ FIX 1: use express.json()
+app.use(express.json());
 app.use(cors());
 
-// MySQL Connection
-const db = createConnection({
+// ✅ FIX 2: use mysql.createConnection
+const db = mysql.createConnection({
   host: "localhost",
   user: process.env.DB_USER,
   password: process.env.PASSWORD_DB,
@@ -26,7 +26,7 @@ db.connect(err => {
   }
 });
 
-// 📍 Distance Formula (Haversine)
+// Distance function
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -42,7 +42,7 @@ function getDistance(lat1, lon1, lat2, lon2) {
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
-// ✅ Add School API
+// Add School
 app.post("/addSchool", (req, res) => {
   const { name, address, latitude, longitude } = req.body;
 
@@ -52,15 +52,14 @@ app.post("/addSchool", (req, res) => {
 
   const sql = "INSERT INTO schools (name, address, latitude, longitude) VALUES (?, ?, ?, ?)";
 
-  db.query(sql, [name, address, latitude, longitude], (err, result) => {
-    if (err) {
-      return res.status(500).json({ error: err });
-    }
+  db.query(sql, [name, address, latitude, longitude], (err) => {
+    if (err) return res.status(500).json(err);
+
     res.json({ message: "School added successfully" });
   });
 });
 
-// ✅ List Schools API
+// List Schools
 app.get("/listSchools", (req, res) => {
   const { latitude, longitude } = req.query;
 
