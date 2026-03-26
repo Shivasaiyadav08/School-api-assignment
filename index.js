@@ -20,9 +20,9 @@ const db = mysql.createConnection({
 
 db.connect((err) => {
   if (err) {
-    console.log("❌ DB Error:", err);
+    console.log("DB Error:", err);
   } else {
-    console.log("✅ MySQL Connected");
+    console.log("MySQL Connected");
   }
 });
 
@@ -43,7 +43,7 @@ function getDistance(lat1, lon1, lat2, lon2) {
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
-// ✅ Add School API
+//  Add School API
 app.post("/addSchool", (req, res) => {
   const { name, address, latitude, longitude } = req.body;
 
@@ -62,11 +62,11 @@ app.post("/addSchool", (req, res) => {
       return res.status(500).json({ error: "Database error" });
     }
 
-    res.json({ message: "✅ School added successfully" });
+    res.json({ message: " School added successfully" });
   });
 });
 
-// ✅ List Schools API
+//  List Schools API
 app.get("/listSchools", (req, res) => {
   const { latitude, longitude } = req.query;
 
@@ -102,5 +102,5 @@ app.get("/listSchools", (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(` Server running on port ${PORT}`);
 });
