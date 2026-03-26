@@ -1,8 +1,10 @@
 require("dotenv").config();
-import express from "express";
-import { createConnection } from "mysql2";
-import { json } from "body-parser";
-import cors from "cors";
+
+
+const express = require("express");
+const mysql = require("mysql2");
+const bodyParser = require("body-parser");
+const cors = require("cors");
 
 const app = express();
 app.use(json());
